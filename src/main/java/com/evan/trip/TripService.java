@@ -1,24 +1,33 @@
 package com.evan.trip;
 import com.evan.exception.UserNotLoggedInException;
 import com.evan.user.User;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import java.util.Collections;
 import java.util.List;
 
 public class TripService {
-    List<Trip> getTripsByUser(User user, User loggedInUser) {
+    @Autowired
+    private TripDAO tripDAO;
+
+    List<Trip> getFriendTrips(User friend, User loggedInUser) {
+        validate(loggedInUser);
+        return friend.isFriendsWith(loggedInUser)
+                ? tripsBy(friend)
+                : noTrips();
+    }
+
+    private void validate(User loggedInUser) {
         if (loggedInUser == null) {
             throw new UserNotLoggedInException();
         }
-        return user.isFriendsWith(loggedInUser)
-                ? tripsBy(user)
-                : noTrips();
     }
 
     private List<Trip> noTrips() {
         return Collections.emptyList();
     }
 
-    protected List<Trip> tripsBy(User user) {
-        return TripDAO.findTripsByUser(user);
+    private List<Trip> tripsBy(User user) {
+        return tripDAO.tripsBy(user);
     }
 }

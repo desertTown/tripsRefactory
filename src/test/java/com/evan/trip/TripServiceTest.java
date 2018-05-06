@@ -3,13 +3,19 @@ package com.evan.trip;
 import com.evan.exception.UserNotLoggedInException;
 import com.evan.user.User;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Spy;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.util.List;
 
 import static com.evan.trip.UserBuilder.aUser;
+import static org.powermock.api.mockito.PowerMockito.when;
 
+@RunWith(PowerMockRunner.class)
 public class TripServiceTest {
     private static final User GUEST = null;
     private static final User UNUSED_USER = null;
@@ -17,15 +23,14 @@ public class TripServiceTest {
     private static final User ANOTHER_USER = new User();
     private static final Trip TO_BRAZIL = new Trip();
     private static final Trip TO_BEIJING = new Trip();
-    private TripService tripService;
-    @Before
-    public void initial() {
-        tripService = new TestableTripService();
-    }
+    @Mock
+    private TripDAO tripDAO;
+    @InjectMocks @Spy
+    private TripService tripService = new TripService();
 
     @Test(expected = UserNotLoggedInException.class) public void
      should_throw_an_exception_when_user_is_not_logged_in() {
-         tripService.getTripsByUser(UNUSED_USER, GUEST);
+        tripService.getFriendTrips(UNUSED_USER, GUEST);
      }
 
     @Test public void
@@ -34,7 +39,7 @@ public class TripServiceTest {
                 .friendsWith(ANOTHER_USER)
                 .withTrips(TO_BRAZIL)
                 .build();
-         List<Trip> friendsTrip = tripService.getTripsByUser(friend, REGISTERED_USER);
+         List<Trip> friendsTrip = tripService.getFriendTrips(friend, REGISTERED_USER);
          Assert.assertEquals(0, friendsTrip.size());
      }
 
@@ -44,15 +49,9 @@ public class TripServiceTest {
                         .friendsWith(ANOTHER_USER, REGISTERED_USER)
                         .withTrips(TO_BRAZIL,TO_BEIJING)
                         .build();
-        List<Trip> friendsTrip = tripService.getTripsByUser(friend, REGISTERED_USER);
+        when(tripDAO.tripsBy(friend)).thenReturn(friend.trips());
+        List<Trip> friendsTrip = tripService.getFriendTrips(friend, REGISTERED_USER);
         Assert.assertEquals(2, friendsTrip.size());
     }
 
-     private class TestableTripService extends TripService{
-
-         @Override
-         protected List<Trip> tripsBy(User user) {
-             return user.trips();
-         }
-     }
 }
