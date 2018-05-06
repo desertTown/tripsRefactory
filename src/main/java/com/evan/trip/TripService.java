@@ -5,27 +5,21 @@ import com.evan.user.User;
 import com.evan.user.UserSession;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class TripService {
     public List<Trip> getTripsByUser(User user) throws UserNotLoggedInException {
-        List<Trip> tripList = new ArrayList<Trip>();
-        User loggedUser = getLoggedInUser();
-        boolean isFriend = false;
-        if (loggedUser != null) {
-            for (User friend : user.getFriends()) {
-                if (friend.equals(loggedUser)) {
-                    isFriend = true;
-                    break;
-                }
-            }
-            if (isFriend) {
-                tripList = tripsBy(user);
-            }
-            return tripList;
-        } else {
+        if (getLoggedInUser() == null) {
             throw new UserNotLoggedInException();
         }
+        return user.isFriendsWith(getLoggedInUser())
+                ? tripsBy(user)
+                : noTrips();
+    }
+
+    private List<Trip> noTrips() {
+        return Collections.emptyList();
     }
 
     protected List<Trip> tripsBy(User user) {
