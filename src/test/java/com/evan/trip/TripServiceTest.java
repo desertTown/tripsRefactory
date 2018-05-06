@@ -17,18 +17,15 @@ public class TripServiceTest {
     private static final User ANOTHER_USER = new User();
     private static final Trip TO_BRAZIL = new Trip();
     private static final Trip TO_BEIJING = new Trip();
-    private User loggedInUser;
-    TripService tripService;
+    private TripService tripService;
     @Before
     public void initial() {
         tripService = new TestableTripService();
-        loggedInUser = REGISTERED_USER;
     }
 
     @Test(expected = UserNotLoggedInException.class) public void
      should_throw_an_exception_when_user_is_not_logged_in() {
-         loggedInUser = GUEST;
-         tripService.getTripsByUser(UNUSED_USER);
+         tripService.getTripsByUser(UNUSED_USER, GUEST);
      }
 
     @Test public void
@@ -37,25 +34,21 @@ public class TripServiceTest {
                 .friendsWith(ANOTHER_USER)
                 .withTrips(TO_BRAZIL)
                 .build();
-         List<Trip> friendsTrip = tripService.getTripsByUser(friend);
-         Assert.assertEquals(friendsTrip.size(), 0);
+         List<Trip> friendsTrip = tripService.getTripsByUser(friend, REGISTERED_USER);
+         Assert.assertEquals(0, friendsTrip.size());
      }
 
     @Test public void
     should_return_friend_trips_when_user_are_friends() {
         User friend = aUser()
-                        .friendsWith(ANOTHER_USER, loggedInUser)
+                        .friendsWith(ANOTHER_USER, REGISTERED_USER)
                         .withTrips(TO_BRAZIL,TO_BEIJING)
                         .build();
-        List<Trip> friendsTrip = tripService.getTripsByUser(friend);
-        Assert.assertEquals(friendsTrip.size(), 2);
+        List<Trip> friendsTrip = tripService.getTripsByUser(friend, REGISTERED_USER);
+        Assert.assertEquals(2, friendsTrip.size());
     }
 
      private class TestableTripService extends TripService{
-         @Override
-         protected User getLoggedInUser() {
-             return loggedInUser;
-         }
 
          @Override
          protected List<Trip> tripsBy(User user) {
